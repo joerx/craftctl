@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Minecraft RCON</title>
+    </head>
+    <body>
+        <header>
+            <h1>Minecraft RCON</h1>
+        </header>
+        <div id="message"></div>
+        <div>
+            <p>
+                Server state: <span id="server-state">n/a</span>
+                <button type="button" id="btn-server-start">start</button>
+                <button type="button" id="btn-server-stop">stop</button>
+            </p>
+        </div>
+        <div>
+            <form id="cmd-form" method="POST" action="/cmd">
+                <fieldset>
+                    <legend>Server Command</legend>
+                    <label for="cmd">Command:</label><br/>
+                    <input type="text" name="cmd" id="cmd"/>
+                    <input type="submit" value="Submit"/>
+                </fieldset>
+            </form>
+        </div>
+        
+        <div>
+            <form id="backup-form" method="POST" action="/backup">
+                <fieldset>
+                    <legend>Backup</legend>
+                    <button type="submit">Do A Backup</button>
+                </fieldset>
+            </form>
+        </div>
+        
+    </body>
+</html>
+    
+    
+    
+<script type="text/javascript">
+async function updateServerState(elem) {
+    let resp = await fetch("/status", {method: 'get'});
+    data = await resp.json();
+
+    let icon = "?"
+
+    switch (data.state) {
+        case "active":
+            icon = ":)"
+            break;
+        case "inactive":
+            icon = ":("
+            break
+    }
+
+    elem.innerHTML = data['state-detail'] + " " + icon;
+}
+
+async function sendCommand(form) {
+    const action = form.action;
+    const method = form.method;
+    const field = document.querySelector('#cmd');
+    const cmd = field.value;
+        
+    console.log(`sending command ${cmd}`);
+    console.log(`${method} ${action}`);
+    
+    const resp = await fetch(action, {
+        method,
+        body: JSON.stringify({cmd})
+    })
+
+    console.log(await resp.json());
+    return false;
+}
+
+async function doBackup(form) {
+    const url = form.action;
+    const method = form.method;
+    
+    console.log(`sending backup command to server`);
+    console.log(`${method} ${url}`);
+    
+    const resp = await fetch(url, {method});
+    
+    console.log(await resp.json());
+}
+
+async function setServerState(action, serverState) {
+    let url
+    switch (action) {
+        case "started":
+            url = "/start";
+            break;
+        case "stopped":
+            url = "/stop";
+            break;
+        default:
+            throw Error("Invalid action, only start/stop are allowed");
+            break;
+    }
+
+    const resp = await fetch(url, {method: "post"});
+    
+    if (resp.status != 200) {
+        body = await resp.text();
+        console.error(`Unexpected response (code ${resp.status}): "${body.trimEnd()}" `);
+        setMessage('error', body.trimEnd());
+    } else {
+        console.log(await resp.json());
+        updateServerState(serverState);
+    }
+}
+
+async function setMessage(severity, message) {
+    messageArea.innerHTML = `<p class="msg-${severity}">${severity}: ${message}</p>`;
+}
+
+const serverState = document.querySelector('#server-state');
+const messageArea = document.querySelector('#message');
+
+document.querySelector('#backup-form').addEventListener('submit', e => {
+    e.preventDefault();
+    doBackup(e.target);
+});
+
+document.querySelector('#cmd-form').addEventListener('submit', e => {
+    e.preventDefault();
+    sendCommand(e.target);
+});
+
+document.querySelector('#btn-server-start').addEventListener('mouseup', e => {
+    e.preventDefault();
+    setServerState('started', serverState);
+});
+
+document.querySelector('#btn-server-stop').addEventListener('mouseup', e => {
+    console.log('stopped', serverState);
+});
+
+updateServerState(serverState);
+
+</script>
