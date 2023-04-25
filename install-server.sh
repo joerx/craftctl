@@ -5,6 +5,11 @@ set -e -o pipefail
 exec > /var/log/minecraft-setup.log
 exec 2>&1
 
+USERNAME=minecraft
+GROUPNAME=minecraft
+
+INSTALL_DIR=/home/$USERNAME/server
+TOOLS_DIR=/home/$USERNAME/tools
 MCRCON_VERSION=0.7.2
 MINECRAFT_DOWNLOAD_URL="https://piston-data.mojang.com/v1/objects/8f3112a1049751cc472ec13e397eade5336ca7ae/server.jar"
 
@@ -18,7 +23,7 @@ apt-get \
   -y --allow-downgrades --allow-remove-essential --allow-change-held-packages \
   dist-upgrade
 
-apt-get -y install pwgen
+apt-get -y install pwgen dbus-user-session
 
 # Install Zulu SDK from their repos
 # See https://docs.azul.com/core/zulu-openjdk/install/debian#install-from-azul-apt-repository
@@ -32,38 +37,38 @@ apt-get -y install ./zulu-repo_1.0.0-3_all.deb
 apt-get update && apt-get -y install zulu19-jre
 
 # Create user
-useradd -m -s '/bin/bash' minecraft
-loginctl enable-linger minecraft
-mkdir -p /home/minecraft/server
+loginctl enable-linger $USERNAME
+mkdir -p $INSTALL_DIR
 
 # Download mcrcon
 echo "Downloading mcrcon version ${MCRCON_VERSION} "
-mkdir -p /home/minecraft/tools/mcrcon
-cd /home/minecraft/tools/mcrcon
-wget https://github.com/Tiiffi/mcrcon/releases/download/v${MCRCON_VERSION}/mcrcon-${MCRCON_VERSION}-linux-x86-64.tar.gz
+mkdir -p $TOOLS_DIR/mcrcon
+cd $TOOLS_DIR/mcrcon
+wget -q https://github.com/Tiiffi/mcrcon/releases/download/v${MCRCON_VERSION}/mcrcon-${MCRCON_VERSION}-linux-x86-64.tar.gz
 tar xzf mcrcon-${MCRCON_VERSION}-linux-x86-64.tar.gz
 rm mcrcon-${MCRCON_VERSION}-linux-x86-64.tar.gz
 
 RCON_PASSWORD=$(pwgen 20)
 
 # Download minecraft
-cd /home/minecraft/server
+cd $INSTALL_DIR
 echo "Download from ${MINECRAFT_DOWNLOAD_URL}"
-wget "${MINECRAFT_DOWNLOAD_URL}"
+wget -q "${MINECRAFT_DOWNLOAD_URL}"
 echo "Download complete"
 
 # Setup systemd service
 cat <<- EOF > /usr/lib/systemd/user/minecraft.service
 [Unit]
 Description=Minecraft Server
+Requires=dbus.socket
 
 [Service]
 Nice=1
 SuccessExitStatus=0 1
-WorkingDirectory=/home/minecraft/server
-ReadWriteDirectories=/home/minecraft/server
+WorkingDirectory=$INSTALL_DIR
+ReadWriteDirectories=$INSTALL_DIR
 ExecStart=/usr/bin/java -Xmx1024M -Xms1024M -jar server.jar nogui
-ExecStop=/home/minecraft/tools/mcrcon/mcrcon -H 127.0.0.1 -P 25575 -p password stop
+ExecStop=$TOOLS_DIR/mcrcon/mcrcon -H 127.0.0.1 -P 25575 -p password stop
 
 [Install]
 WantedBy=default.target
@@ -72,9 +77,9 @@ EOF
 chmod 664 /usr/lib/systemd/user/minecraft.service
 
 # Basic configuration
-echo "eula=true" > /home/minecraft/server/eula.txt
+echo "eula=true" > $INSTALL_DIR/eula.txt
 
-cat << EOF > /home/minecraft/server/server.properties
+cat << EOF > $INSTALL_DIR/server.properties
 #Minecraft server properties
 #(File modification date and time)
 enable-jmx-monitoring=false
@@ -135,10 +140,11 @@ resource-pack-sha1=
 max-world-size=29999984
 EOF
 
-chown -R minecraft:minecraft /home/minecraft/
+chown -R $USERNAME:$GROUPNAME $TOOLS_DIR
+chown -R $USERNAME:$GROUPNAME $INSTALL_DIR
 
 # Start minecraft
 echo "Starting minecraft"
 
-systemctl --user -M minecraft@ daemon-reload
-systemctl --user -M minecraft@ start minecraft
+systemctl --user -M $USERNAME@ daemon-reload
+systemctl --user -M $USERNAME@ start minecraft

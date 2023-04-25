@@ -16,9 +16,11 @@ func main() {
 	flag.StringVar(&srvOpts.RCONHostPort, "rcon-addr", "127.0.0.1:25575", "Address of Minecraft RCON server")
 	flag.StringVar(&srvOpts.RCONPasswd, "rcon-passwd", "passwd", "Password for Minecraft RCON server")
 	flag.StringVar(&srvOpts.MCWorldDir, "world-dir", "./server/world", "Directory with Minecraft world data")
-	flag.StringVar(&srvOpts.UnitName, "unit-name", "minecraft", "Systemd unit name used for the minecraft server")
+	flag.StringVar(&srvOpts.UnitName, "unit-name", "minecraft.service", "Systemd unit name used for the minecraft server")
 
 	flag.Parse()
+
+	log.Printf("server opts: %#v", srvOpts)
 
 	cmd := flag.Arg(0)
 	switch cmd {

@@ -8,7 +8,7 @@ set -e -o pipefail
 VM_IMG_DIR=${VM_IMG_DIR:-$HOME/Devel/isos}
 
 # Cleanup existing VM if exists, yes/no
-DO_CLEANUP="no"
+DO_FORCE="no"
 
 # Only Ubuntu releases are supported for now
 RELEASE="jammy"
@@ -20,10 +20,10 @@ NAME=$(basename $PWD)
 VMDIR=.vm
 
 parse_opts() {
-    while getopts 'cr:h' opt; do
+    while getopts 'fr:h' opt; do
         case "$opt" in
-            c)
-                DO_CLEANUP=yes
+            f)
+                DO_FORCE=yes
                 ;;
             r)
                 arg="$OPTARG"
@@ -61,12 +61,20 @@ EOF
 #cloud-config
 
 users:
- - name: ubuntu
+ - name: minecraft
    ssh_authorized_keys:
     - $SSH_RSA
    sudo: ['ALL=(ALL) NOPASSWD:ALL']
    groups: sudo
    shell: /bin/bash
+
+packages:
+ - golang-go
+ - curl
+ - gnupg
+
+mounts:
+ - [ code, /mnt/code, virtiofs, "rw,relatime,nofail", "0", "0"]
 EOF
 
     # Generate multi-part cloudinit mime archive
@@ -155,17 +163,16 @@ download_image() {
 
 
 parse_opts $@
-echo "RELEASE=$RELEASE; NAME=$NAME; DO_CLEANUP=$DO_CLEANUP"
+echo "RELEASE=$RELEASE; NAME=$NAME; DO_FORCE=$DO_FORCE"
 
 if [[ -d $VMDIR ]]; then
-    if [[ "$DO_CLEANUP" != "yes" ]]; then
+    if [[ "$DO_FORCE" != "yes" ]]; then
         echo "VM already exists, to re-create, run vm-destroy.sh first"
         exit 1
     fi
     cleanup_vm $NAME
     rm -rf $VMDIR
 fi
-
 
 IMG_PATH=$(download_image $RELEASE)
 

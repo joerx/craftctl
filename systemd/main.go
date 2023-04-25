@@ -22,12 +22,29 @@ func NewUnitController(ctx context.Context, name string) (*unitController, error
 	return &unitController{name, conn}, nil
 }
 
-func (uc *unitController) Start(ctx context.Context) error {
-	return nil
+func (uc *unitController) Start(ctx context.Context) (string, error) {
+	en := unit.UnitNameEscape(uc.name)
+	ch := make(chan string)
+
+	// TODO: add timeout
+	if _, err := uc.conn.StartUnitContext(ctx, en, "replace", ch); err != nil {
+		return "", err
+	}
+	state := <-ch
+
+	return state, nil
 }
 
-func (uc *unitController) Stop(ctx context.Context) error {
-	return nil
+func (uc *unitController) Stop(ctx context.Context) (string, error) {
+	en := unit.UnitNameEscape(uc.name)
+	ch := make(chan string)
+
+	if _, err := uc.conn.StopUnitContext(ctx, en, "replace", ch); err != nil {
+		return "", err
+	}
+	state := <-ch
+
+	return state, nil
 }
 
 func (uc *unitController) GetState(ctx context.Context) (handler.State, error) {

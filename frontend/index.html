@@ -138,7 +138,8 @@ document.querySelector('#btn-server-start').addEventListener('mouseup', e => {
 });
 
 document.querySelector('#btn-server-stop').addEventListener('mouseup', e => {
-    console.log('stopped', serverState);
+    e.preventDefault();
+    setServerState('stopped', serverState);
 });
 
 updateServerState(serverState);

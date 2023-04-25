@@ -31,7 +31,7 @@ func newServer(opts Opts) (*http.ServeMux, error) {
 
 	ctx := context.Background()
 
-	ss, err := systemd.NewUnitController(ctx, opts.UnitName)
+	uc, err := systemd.NewUnitController(ctx, opts.UnitName)
 	if err != nil {
 		return nil, err
 	}
@@ -43,9 +43,9 @@ func newServer(opts Opts) (*http.ServeMux, error) {
 	mux.Handle("/", frontend.New())
 	mux.Handle("/cmd", handler.NewCommand(client))
 	mux.Handle("/backup", handler.NewBackup(client, worldFS))
-	mux.Handle("/start", handler.NewStart(ss))
-	mux.Handle("/stop", handler.NewStop(ss))
-	mux.Handle("/status", handler.NewStatus(ss))
+	mux.Handle("/start", handler.NewStart(uc))
+	mux.Handle("/stop", handler.NewStop(uc))
+	mux.Handle("/status", handler.NewStatus(uc))
 
 	return mux, nil
 }

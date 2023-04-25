@@ -10,25 +10,42 @@ type ClientOpts struct {
 }
 
 type Client struct {
-	mc *minecraft.Client
+	opts ClientOpts
 }
 
-func (c *Client) Command(cmd string) error {
-	if _, err := c.mc.SendCommand(cmd); err != nil {
-		return err
+var client *minecraft.Client
+
+func getClient(opts ClientOpts) (*minecraft.Client, error) {
+	if client != nil {
+		return client, nil
 	}
-	return nil
-}
 
-func NewClient(opts ClientOpts) (*Client, error) {
-	mc, err := minecraft.NewClient(opts.HostPort)
+	var err error
+	client, err := minecraft.NewClient(opts.HostPort)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := mc.Authenticate(opts.Password); err != nil {
+	if err := client.Authenticate(opts.Password); err != nil {
 		return nil, err
 	}
 
-	return &Client{mc}, nil
+	return client, nil
+}
+
+func (c *Client) Command(cmd string) error {
+	mc, err := getClient(c.opts)
+	if err != nil {
+		return err
+	}
+
+	if _, err := mc.SendCommand(cmd); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func NewClient(opts ClientOpts) (*Client, error) {
+	return &Client{opts}, nil
 }

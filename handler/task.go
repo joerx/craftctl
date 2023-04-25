@@ -11,11 +11,11 @@ const StateInactive = "inactive"
 const StateUnknown = "unknown"
 
 type Starter interface {
-	Start(ctx context.Context) error
+	Start(ctx context.Context) (string, error)
 }
 
 type Stopper interface {
-	Stop(ctx context.Context) error
+	Stop(ctx context.Context) (string, error)
 }
 
 type State struct {
@@ -53,11 +53,33 @@ func NewStatus(m Monitor) http.Handler {
 }
 
 func (h *startHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	http.Error(w, "TODO", http.StatusNotImplemented)
+	state, err := h.starter.Start(req.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-type", "application/json")
+
+	json.NewEncoder(w).Encode(struct {
+		State string `json:"state"`
+	}{state})
 }
 
 func (h *stopHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	http.Error(w, "TODO", http.StatusNotImplemented)
+	state, err := h.stopper.Stop(req.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-type", "application/json")
+
+	json.NewEncoder(w).Encode(struct {
+		State string `json:"state"`
+	}{state})
 }
 
 func (h *statusHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
