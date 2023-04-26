@@ -27,11 +27,9 @@ func (ch *Command) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err := ch.rcon.Command(c.Cmd); err != nil {
 		log.Printf("Error sending command to server: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		serveJSONError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusAccepted)
-	w.Header().Set("Content-type", "application/json")
-	json.NewEncoder(w).Encode(StatusResponse{Status: "accepted"})
+	serveJSON(w, statusResponse{Status: "accepted"}, http.StatusAccepted)
 }

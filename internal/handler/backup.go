@@ -3,10 +3,9 @@ package handler
 import (
 	"bytes"
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
 	"io/fs"
-	"joerx/minecraft-cli/zipper"
+	"joerx/minecraft-cli/internal/zipper"
 	"log"
 	"net/http"
 )
@@ -30,19 +29,18 @@ func (bh *Backup) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Telling server to save the game")
 	if err := bh.rcon.Command("save-all flush"); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		serveJSONError(w, err, http.StatusInternalServerError)
+		return
 	}
 
 	buf := new(bytes.Buffer)
 	if err := zipper.ZipFS(bh.worldFS, buf); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		serveJSONError(w, err, http.StatusInternalServerError)
+		return
 	}
 
 	checksum := fmt.Sprintf("%x", md5.Sum(buf.Bytes()))
 	log.Printf("Archived world data, checksum is %s", checksum)
 
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-type", "application/json")
-
-	json.NewEncoder(w).Encode(backupResponse{MD5: checksum})
+	serveJSON(w, backupResponse{MD5: checksum}, http.StatusOK)
 }

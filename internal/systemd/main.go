@@ -3,7 +3,7 @@ package systemd
 import (
 	"context"
 	"fmt"
-	"joerx/minecraft-cli/handler"
+	"joerx/minecraft-cli/internal/handler/task"
 
 	"github.com/coreos/go-systemd/v22/dbus"
 	"github.com/coreos/go-systemd/v22/unit"
@@ -47,8 +47,8 @@ func (uc *unitController) Stop(ctx context.Context) (string, error) {
 	return state, nil
 }
 
-func (uc *unitController) GetState(ctx context.Context) (handler.State, error) {
-	state := handler.State{}
+func (uc *unitController) GetState(ctx context.Context) (task.State, error) {
+	state := task.State{}
 
 	en := unit.UnitNameEscape(uc.name)
 	us, err := uc.conn.ListUnitsByNamesContext(ctx, []string{en})
@@ -62,11 +62,11 @@ func (uc *unitController) GetState(ctx context.Context) (handler.State, error) {
 
 	switch us[0].ActiveState {
 	case "inactive":
-		state.State = handler.StateInactive
+		state.State = task.StateInactive
 	case "active":
-		state.State = handler.StateActive
+		state.State = task.StateActive
 	default:
-		state.State = handler.StateUnknown
+		state.State = task.StateUnknown
 	}
 
 	state.StateDetail = fmt.Sprintf("%s (%s)", us[0].ActiveState, us[0].SubState)

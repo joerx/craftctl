@@ -1,11 +1,11 @@
-package srv
+package server
 
 import (
 	"context"
-	"joerx/minecraft-cli/frontend"
-	"joerx/minecraft-cli/handler"
-	"joerx/minecraft-cli/mc"
-	"joerx/minecraft-cli/systemd"
+	"joerx/minecraft-cli/internal/frontend"
+	"joerx/minecraft-cli/internal/handler"
+	"joerx/minecraft-cli/internal/mc"
+	"joerx/minecraft-cli/internal/systemd"
 	"log"
 	"net/http"
 	"os"

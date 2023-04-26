@@ -1,9 +1,9 @@
 default: build
 
-build: out/mccp
+build: out/craftctl
 
-out/mccp:
-	go build -ldflags="-X 'main.Version=1.0-SNAPSHOT'" -o out/mccp ./cmd/
+out/craftctl:
+	go build -ldflags="-X 'main.Version=1.0-SNAPSHOT'" -o out/craftctl ./cmd/
 
 .PHONY: test
 test:

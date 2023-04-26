@@ -3,14 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"joerx/minecraft-cli/srv"
+	"joerx/minecraft-cli/internal/server"
 	"log"
 )
 
 var Version = "development"
 
 func main() {
-	srvOpts := srv.Opts{}
+	srvOpts := server.Opts{}
 
 	flag.StringVar(&srvOpts.Addr, "addr", ":8080", "Server address")
 	flag.StringVar(&srvOpts.RCONHostPort, "rcon-addr", "127.0.0.1:25575", "Address of Minecraft RCON server")
@@ -25,7 +25,7 @@ func main() {
 	cmd := flag.Arg(0)
 	switch cmd {
 	case "server":
-		if err := srv.Run(srvOpts); err != nil {
+		if err := server.Run(srvOpts); err != nil {
 			log.Fatal(err)
 		}
 	case "version":
