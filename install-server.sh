@@ -140,8 +140,7 @@ resource-pack-sha1=
 max-world-size=29999984
 EOF
 
-chown -R $USERNAME:$GROUPNAME $TOOLS_DIR
-chown -R $USERNAME:$GROUPNAME $INSTALL_DIR
+chown -R $USERNAME:$GROUPNAME /home/minecraft
 
 # Start minecraft
 echo "Starting minecraft"

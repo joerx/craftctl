@@ -30,6 +30,7 @@
             <form id="backup-form" method="POST" action="/backup">
                 <fieldset>
                     <legend>Backup</legend>
+                    <input type="text" name="key" id="backup-key"/>
                     <button type="submit">Do A Backup</button>
                 </fieldset>
             </form>
@@ -80,11 +81,15 @@ async function sendCommand(form) {
 async function doBackup(form) {
     const url = form.action;
     const method = form.method;
-    
+    const key = document.querySelector('#backup-key').value;
+
     console.log(`sending backup command to server`);
     console.log(`${method} ${url}`);
     
-    const resp = await fetch(url, {method});
+    const resp = await fetch(url, {
+        method,
+        body: JSON.stringify({key})
+    });
     
     console.log(await resp.json());
 }

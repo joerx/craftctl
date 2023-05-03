@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 )
 
@@ -30,5 +31,6 @@ func serveJSON(w http.ResponseWriter, payload interface{}, statusCode int) {
 }
 
 func serveJSONError(w http.ResponseWriter, err error, statusCode int) {
+	log.Println(err)
 	serveJSON(w, errorResponse{err.Error()}, statusCode)
 }

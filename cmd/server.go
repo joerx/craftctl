@@ -17,6 +17,8 @@ func main() {
 	flag.StringVar(&srvOpts.RCONPasswd, "rcon-passwd", "passwd", "Password for Minecraft RCON server")
 	flag.StringVar(&srvOpts.MCWorldDir, "world-dir", "./server/world", "Directory with Minecraft world data")
 	flag.StringVar(&srvOpts.UnitName, "unit-name", "minecraft.service", "Systemd unit name used for the minecraft server")
+	flag.StringVar(&srvOpts.S3Bucket, "s3-bucket", "", "S3 bucket to upload backup files to")
+	flag.StringVar(&srvOpts.S3Region, "s3-region", "", "AWS region the bucket is located in")
 
 	flag.Parse()
 
