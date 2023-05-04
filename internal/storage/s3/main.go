@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"joerx/minecraft-cli/internal/handler"
+	"joerx/minecraft-cli/internal/service/backup"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -22,9 +22,9 @@ func NewStore(sess *session.Session, bucket string) *S3Store {
 	return &S3Store{sess, bucket}
 }
 
-func (st *S3Store) Put(ctx context.Context, key string, r io.Reader) (handler.ObjectInfo, error) {
+func (st *S3Store) Put(ctx context.Context, key string, r io.Reader) (backup.ObjectInfo, error) {
 	uploader := s3manager.NewUploader(st.sess)
-	oi := handler.ObjectInfo{}
+	oi := backup.ObjectInfo{}
 
 	_, err := uploader.UploadWithContext(ctx, &s3manager.UploadInput{
 		Bucket: aws.String(st.bucket),

@@ -1,21 +1,23 @@
 package mc
 
 import (
+	"context"
+
 	"github.com/willroberts/minecraft-client"
 )
 
-type ClientOpts struct {
+type ClientConfig struct {
 	Password string
 	HostPort string
 }
 
 type Client struct {
-	opts ClientOpts
+	cfg ClientConfig
 }
 
 var client *minecraft.Client
 
-func getClient(opts ClientOpts) (*minecraft.Client, error) {
+func getClient(opts ClientConfig) (*minecraft.Client, error) {
 	if client != nil {
 		return client, nil
 	}
@@ -33,19 +35,20 @@ func getClient(opts ClientOpts) (*minecraft.Client, error) {
 	return client, nil
 }
 
-func (c *Client) Command(cmd string) error {
-	mc, err := getClient(c.opts)
+func (c *Client) Command(ctx context.Context, cmd string) (string, error) {
+	mc, err := getClient(c.cfg)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	if _, err := mc.SendCommand(cmd); err != nil {
-		return err
+	response, err := mc.SendCommand(cmd)
+	if err != nil {
+		return "", err
 	}
 
-	return nil
+	return response.Body, err
 }
 
-func NewClient(opts ClientOpts) (*Client, error) {
-	return &Client{opts}, nil
+func NewClient(cfg ClientConfig) *Client {
+	return &Client{cfg}
 }

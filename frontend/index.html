@@ -1,11 +1,21 @@
 <!DOCTYPE html>
+<style type="text/css">
+
+#title {
+    background-image: url("assets/images/creeper.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    padding-left: 30px;
+}
+
+</style>
 <html lang="en">
     <head>
-        <title>Minecraft RCON</title>
+        <title>craftctl</title>
     </head>
     <body>
         <header>
-            <h1>Minecraft RCON</h1>
+            <h1 id="title">craftctl</h1>
         </header>
         <div id="message"></div>
         <div>
@@ -64,14 +74,14 @@ async function sendCommand(form) {
     const action = form.action;
     const method = form.method;
     const field = document.querySelector('#cmd');
-    const cmd = field.value;
+    const command = field.value;
         
     console.log(`sending command ${cmd}`);
     console.log(`${method} ${action}`);
     
     const resp = await fetch(action, {
         method,
-        body: JSON.stringify({cmd})
+        body: JSON.stringify({command})
     })
 
     console.log(await resp.json());

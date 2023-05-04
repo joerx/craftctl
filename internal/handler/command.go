@@ -1,35 +1,33 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
-	"log"
+	"joerx/minecraft-cli/internal/service/rcon"
 	"net/http"
 )
 
-type cmdRequest struct {
-	Cmd string `json:"cmd"`
+type CommandFunc func(context.Context, rcon.CommandInput) (rcon.CommandOutput, error)
+
+type CommandHandler struct {
+	cmd CommandFunc
 }
 
-type Command struct {
-	rcon RCon
+func NewCommandHandler(s *rcon.Service) *CommandHandler {
+	return &CommandHandler{cmd: s.Command}
 }
 
-func NewCommand(rc RCon) *Command {
-	return &Command{rcon: rc}
-}
-
-func (ch *Command) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var c cmdRequest
-	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+func (ch *CommandHandler) RunCommand(w http.ResponseWriter, r *http.Request) error {
+	var input rcon.CommandInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		return err
 	}
 
-	if err := ch.rcon.Command(c.Cmd); err != nil {
-		log.Printf("Error sending command to server: %v", err)
-		serveJSONError(w, err, http.StatusInternalServerError)
-		return
+	output, err := ch.cmd(r.Context(), input)
+	if err != nil {
+		return err
 	}
 
-	serveJSON(w, statusResponse{Status: "accepted"}, http.StatusAccepted)
+	serveJSON(w, output, http.StatusAccepted)
+	return nil
 }

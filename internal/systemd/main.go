@@ -9,20 +9,20 @@ import (
 	"github.com/coreos/go-systemd/v22/unit"
 )
 
-type unitController struct {
+type UnitController struct {
 	name string
 	conn *dbus.Conn
 }
 
-func NewUnitController(ctx context.Context, name string) (*unitController, error) {
+func NewUnitController(ctx context.Context, name string) (*UnitController, error) {
 	conn, err := dbus.NewUserConnectionContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &unitController{name, conn}, nil
+	return &UnitController{name, conn}, nil
 }
 
-func (uc *unitController) Start(ctx context.Context) (string, error) {
+func (uc *UnitController) Start(ctx context.Context) (string, error) {
 	en := unit.UnitNameEscape(uc.name)
 	ch := make(chan string)
 
@@ -35,7 +35,7 @@ func (uc *unitController) Start(ctx context.Context) (string, error) {
 	return state, nil
 }
 
-func (uc *unitController) Stop(ctx context.Context) (string, error) {
+func (uc *UnitController) Stop(ctx context.Context) (string, error) {
 	en := unit.UnitNameEscape(uc.name)
 	ch := make(chan string)
 
@@ -47,7 +47,7 @@ func (uc *unitController) Stop(ctx context.Context) (string, error) {
 	return state, nil
 }
 
-func (uc *unitController) GetState(ctx context.Context) (task.State, error) {
+func (uc *UnitController) GetState(ctx context.Context) (task.State, error) {
 	state := task.State{}
 
 	en := unit.UnitNameEscape(uc.name)

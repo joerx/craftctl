@@ -55,7 +55,6 @@ func (h fsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func New() http.Handler {
-	// return
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handleIndex)
 	mux.Handle("/assets/", &fsHandler{staticFS})

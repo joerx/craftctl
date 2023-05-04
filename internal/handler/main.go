@@ -5,16 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 )
 
 type statusResponse struct {
 	Status string `json:"status"`
-}
-
-type errorResponse struct {
-	Error string `json:"error"`
 }
 
 func serveJSON(w http.ResponseWriter, payload interface{}, statusCode int) {
@@ -28,9 +23,4 @@ func serveJSON(w http.ResponseWriter, payload interface{}, statusCode int) {
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(statusCode)
 	io.Copy(w, buf)
-}
-
-func serveJSONError(w http.ResponseWriter, err error, statusCode int) {
-	log.Println(err)
-	serveJSON(w, errorResponse{err.Error()}, statusCode)
 }
