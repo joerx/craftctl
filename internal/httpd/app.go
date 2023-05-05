@@ -25,7 +25,7 @@ type AppConfig struct {
 
 type Application struct {
 	RCon   *rcon.Service
-	Backup *backup.Service
+	Backup backup.Service
 	UC     *systemd.UnitController
 }
 

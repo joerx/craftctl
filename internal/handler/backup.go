@@ -7,10 +7,10 @@ import (
 )
 
 type BackupHandler struct {
-	svc *backup.Service
+	svc backup.Service
 }
 
-func NewBackupHandler(svc *backup.Service) *BackupHandler {
+func NewBackupHandler(svc backup.Service) *BackupHandler {
 	return &BackupHandler{svc}
 }
 

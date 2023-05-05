@@ -1,76 +1,59 @@
 package handler
 
-// // go:embed world
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"joerx/minecraft-cli/internal/service/backup"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
+
+// go:embed testdata/world
 // var worldFS embed.FS
 // var worldSum string = "76cdb2bad9582d23c1f6f4d868218d6c"
 
-// type testRCon struct {
-// 	t *testing.T
-// }
+type testBackupService struct {
+}
 
-// func (m testRCon) Command(cmd string) error {
-// 	m.t.Logf("Received command '%s'", cmd)
-// 	return nil
-// }
+func (tb *testBackupService) Create(ctx context.Context, in backup.CreateBackupInput) (backup.CreateBackupOutput, error) {
+	return backup.CreateBackupOutput{}, nil
+}
 
-// type testStore struct {
-// 	prefix string
-// }
+func (tb *testBackupService) List(ctx context.Context) (backup.ListBackupOutput, error) {
+	return backup.ListBackupOutput{}, nil
+}
 
-// func (ts *testStore) Put(ctx context.Context, key string, r io.Reader) (ObjectInfo, error) {
-// 	l := fmt.Sprintf("%s/%s", ts.prefix, key)
-// 	return ObjectInfo{Location: l}, nil
-// }
+func (tb *testBackupService) Restore(ctx context.Context, in backup.RestoreBackupInput) (backup.RestoreBackupOutput, error) {
+	return backup.RestoreBackupOutput{}, nil
+}
 
-// func TestHandleBackup(t *testing.T) {
-// 	prefix := "test://abc123"
+func TestCreateBackup(t *testing.T) {
+	handler := &BackupHandler{svc: &testBackupService{}}
 
-// 	cm := &testRCon{t}
-// 	ts := &testStore{prefix}
-// 	handler := NewBackup(cm, worldFS, ts)
+	in := backup.CreateBackupInput{Key: "foo"}
+	bdy := bytes.NewBuffer([]byte{})
+	if err := json.NewEncoder(bdy).Encode(in); err != nil {
+		t.Fatal(err)
+	}
 
-// 	testCases := []struct {
-// 		wantCode     int
-// 		wantSum      string
-// 		wantLocation string
-// 		key          string
-// 	}{
-// 		{http.StatusOK, worldSum, fmt.Sprintf("%s/bar.zip", prefix), "bar"},
-// 		{http.StatusOK, worldSum, fmt.Sprintf("%s/foo-bar.zip", prefix), "foo bar"},
-// 		{http.StatusOK, worldSum, fmt.Sprintf("%s/foo.zip", prefix), "foo.zip"},
-// 		{http.StatusBadRequest, "", "", ""},
-// 	}
+	req := httptest.NewRequest(http.MethodPost, "/", bdy)
+	w := httptest.NewRecorder()
 
-// 	for _, tc := range testCases {
-// 		bdy, err := json.Marshal(map[string]string{"key": tc.key})
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
+	if err := handler.Create(w, req); err != nil {
+		t.Fatal(err)
+	}
 
-// 		req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(bdy))
-// 		w := httptest.NewRecorder()
+	var o backup.CreateBackupOutput
+	resp := w.Result()
 
-// 		handler.ServeHTTP(w, req)
+	if err := json.NewDecoder(resp.Body).Decode(&o); err != nil {
+		t.Fatal(err)
+	}
 
-// 		var d map[string]string
-// 		resp := w.Result()
-
-// 		if err := json.NewDecoder(resp.Body).Decode(&d); err != nil {
-// 			t.Fatal(err)
-// 		}
-
-// 		if tc.wantCode != resp.StatusCode {
-// 			t.Errorf("want status %d, got %d", tc.wantCode, resp.StatusCode)
-// 		}
-
-// 		gotSum := d["md5"]
-// 		if tc.wantSum != gotSum {
-// 			t.Errorf("want md5 sum '%s', got '%s'", tc.wantSum, gotSum)
-// 		}
-
-// 		gotLocation := d["location"]
-// 		if tc.wantLocation != gotLocation {
-// 			t.Errorf("want location '%s', got '%s'", tc.wantLocation, gotLocation)
-// 		}
-// 	}
-// }
+	wantCode := http.StatusOK
+	if wantCode != resp.StatusCode {
+		t.Errorf("want status %d, got %d", wantCode, resp.StatusCode)
+	}
+}
