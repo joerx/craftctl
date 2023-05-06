@@ -8,7 +8,6 @@ import (
 	"joerx/minecraft-cli/internal/mc"
 	"joerx/minecraft-cli/internal/storage/s3"
 	"joerx/minecraft-cli/internal/systemd"
-	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -37,14 +36,18 @@ func newApp(cfg appConfig) (*application, error) {
 		return nil, err
 	}
 
-	worldFS := os.DirFS(cfg.MCWorldDir)
 	store, err := newStore(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	rsvc := rcon.NewService(rc)
-	bsvc := backup.NewService(backup.Config{RCon: rc, World: worldFS, Store: store})
+	bsvc := backup.NewService(backup.Config{
+		RCon:     rc,
+		WorldDir: cfg.MCWorldDir,
+		Store:    store,
+		UC:       uc,
+	})
 
 	return &application{
 		RCon:   rsvc,

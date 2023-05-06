@@ -68,6 +68,20 @@ func (st *S3Store) List(ctx context.Context) ([]backup.ObjectInfo, error) {
 	return objects, nil
 }
 
+func (st *S3Store) Get(ctx context.Context, key string, w io.WriterAt) error {
+	dl := s3manager.NewDownloader(st.sess)
+	in := &s3.GetObjectInput{
+		Bucket: aws.String(st.bucket),
+		Key:    aws.String(key),
+	}
+
+	if _, err := dl.Download(w, in); err != nil {
+		return s3Error(err)
+	}
+
+	return nil
+}
+
 func s3Error(err error) error {
 	var msg string
 	splits := strings.Split(strings.ReplaceAll(err.Error(), "\r\n", "\n"), "\n")

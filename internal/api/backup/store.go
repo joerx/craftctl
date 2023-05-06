@@ -15,7 +15,7 @@ type Putter interface {
 }
 
 type Getter interface {
-	Get(ctx context.Context, key string, w io.Writer) (ObjectInfo, error)
+	Get(ctx context.Context, key string, w io.WriterAt) error
 }
 
 type Lister interface {
@@ -25,5 +25,5 @@ type Lister interface {
 type Store interface {
 	Putter
 	Lister
-	// Getter
+	Getter
 }

@@ -20,6 +20,10 @@ func (ts *testStore) List(ctx context.Context) ([]ObjectInfo, error) {
 	return ts.backups, ts.err
 }
 
+func (ts *testStore) Get(ctx context.Context, key string, w io.WriterAt) error {
+	return nil
+}
+
 func TestList(t *testing.T) {
 	testCases := []struct {
 		wantErr    error

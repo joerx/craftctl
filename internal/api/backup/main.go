@@ -2,8 +2,8 @@ package backup
 
 import (
 	"context"
-	"io/fs"
 	"joerx/minecraft-cli/internal/api/rcon"
+	"joerx/minecraft-cli/internal/systemd"
 )
 
 type InputError string
@@ -13,9 +13,10 @@ func (ie InputError) Error() string {
 }
 
 type Config struct {
-	RCon  rcon.RCon
-	Store Store
-	World fs.FS
+	RCon     rcon.RCon
+	Store    Store
+	WorldDir string
+	UC       *systemd.UnitController
 }
 
 type Service interface {
@@ -37,7 +38,21 @@ type ListBackupOutput struct {
 	Backups []ObjectInfo `json:"backups"`
 }
 
-type RestoreBackupInput struct{}
+type RestoreBackupInput struct {
+	Key string `json:"key"`
+}
 
 type RestoreBackupOutput struct {
+	Message string `json:"message"`
+}
+
+func NewService(cfg Config) Service {
+	return &backupService{cfg.RCon, cfg.Store, cfg.UC, cfg.WorldDir}
+}
+
+type backupService struct {
+	rcon     rcon.RCon
+	store    Store
+	uc       *systemd.UnitController
+	worldDir string
 }

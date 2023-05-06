@@ -5,22 +5,11 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
-	"io/fs"
-	"joerx/minecraft-cli/internal/api/rcon"
 	"joerx/minecraft-cli/internal/zipper"
 	"log"
+	"os"
 	"strings"
 )
-
-func NewService(cfg Config) Service {
-	return &backupService{cfg.RCon, cfg.Store, cfg.World}
-}
-
-type backupService struct {
-	rcon  rcon.RCon
-	store Store
-	world fs.FS
-}
 
 func (s *backupService) Create(ctx context.Context, in CreateBackupInput) (CreateBackupOutput, error) {
 	log.Println("Received backup request")
@@ -38,19 +27,6 @@ func (s *backupService) Create(ctx context.Context, in CreateBackupInput) (Creat
 	return s.zipAndStore(ctx, in.Key)
 }
 
-// List returns a list of backups from the underlying store.
-func (s *backupService) List(ctx context.Context) (ListBackupOutput, error) {
-	backups, err := s.store.List(ctx)
-	if err != nil {
-		return ListBackupOutput{}, err
-	}
-	return ListBackupOutput{Backups: backups}, nil
-}
-
-func (s *backupService) Restore(ctx context.Context, in RestoreBackupInput) (RestoreBackupOutput, error) {
-	return RestoreBackupOutput{}, nil
-}
-
 // sanitizeKey replaces spaces in the filename and ensures the result has the desired suffix
 func sanitizeKey(key, suffix string) string {
 	key = strings.ReplaceAll(key, " ", "-")
@@ -62,7 +38,8 @@ func sanitizeKey(key, suffix string) string {
 
 func (s *backupService) zipAndStore(ctx context.Context, key string) (CreateBackupOutput, error) {
 	buf := new(bytes.Buffer)
-	if err := zipper.ZipFS(s.world, buf); err != nil {
+	worldFS := os.DirFS(s.worldDir)
+	if err := zipper.ZipFS(worldFS, buf); err != nil {
 		return CreateBackupOutput{}, err
 	}
 

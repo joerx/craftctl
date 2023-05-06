@@ -40,3 +40,20 @@ func ListBackups(svc func(context.Context) (backup.ListBackupOutput, error)) htt
 		return nil
 	})
 }
+
+func RestoreBackup(svc func(context.Context, backup.RestoreBackupInput) (backup.RestoreBackupOutput, error)) http.Handler {
+	return h(func(w http.ResponseWriter, r *http.Request) error {
+		var input backup.RestoreBackupInput
+		if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+			return err
+		}
+
+		out, err := svc(r.Context(), input)
+		if err != nil {
+			return err
+		}
+
+		serveJSON(w, out, http.StatusAccepted)
+		return nil
+	})
+}
