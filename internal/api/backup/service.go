@@ -6,7 +6,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io/fs"
-	"joerx/minecraft-cli/internal/service/rcon"
+	"joerx/minecraft-cli/internal/api/rcon"
 	"joerx/minecraft-cli/internal/zipper"
 	"log"
 	"strings"
@@ -70,7 +70,7 @@ func (s *backupService) zipAndStore(ctx context.Context, key string) (CreateBack
 	log.Printf("Archived world data, checksum is %s", checksum)
 
 	return CreateBackupOutput{
-		MD5:      checksum,
-		Location: oi.Location,
+		MD5:        checksum,
+		ObjectInfo: oi,
 	}, nil
 }

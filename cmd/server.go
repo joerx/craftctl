@@ -3,14 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"joerx/minecraft-cli/internal/httpd"
+	"joerx/minecraft-cli/internal/server"
 	"log"
 )
 
 var Version = "development"
 
 func main() {
-	cfg := httpd.ServerConfig{}
+	cfg := server.Config{}
 
 	flag.StringVar(&cfg.Addr, "addr", ":8080", "Server address")
 	flag.StringVar(&cfg.RCONHostPort, "rcon-addr", "127.0.0.1:25575", "Address of Minecraft RCON server")
@@ -27,7 +27,7 @@ func main() {
 	cmd := flag.Arg(0)
 	switch cmd {
 	case "server":
-		if err := httpd.Run(cfg); err != nil {
+		if err := server.Run(cfg); err != nil {
 			log.Fatal(err)
 		}
 	case "version":

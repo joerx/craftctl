@@ -1,4 +1,4 @@
-package httpd
+package server
 
 import (
 	"log"
@@ -8,12 +8,12 @@ import (
 	"syscall"
 )
 
-type ServerConfig struct {
-	AppConfig
+type Config struct {
+	appConfig
 	Addr string
 }
 
-func newServer(cfg AppConfig) (*http.ServeMux, error) {
+func newServer(cfg appConfig) (*http.ServeMux, error) {
 	app, err := newApp(cfg)
 	if err != nil {
 		return nil, err
@@ -28,11 +28,11 @@ func runServer(m http.Handler, addr string) error {
 	return nil
 }
 
-func Run(cfg ServerConfig) error {
+func Run(cfg Config) error {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGTERM, syscall.SIGINT)
 
-	mux, err := newServer(cfg.AppConfig)
+	mux, err := newServer(cfg.appConfig)
 	if err != nil {
 		return err
 	}

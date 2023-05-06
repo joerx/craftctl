@@ -3,21 +3,24 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"joerx/minecraft-cli/internal/service/rcon"
+	"joerx/minecraft-cli/internal/api/rcon"
 	"net/http"
 )
 
-type CommandFunc func(context.Context, rcon.CommandInput) (rcon.CommandOutput, error)
+type commandFunc func(context.Context, rcon.CommandInput) (rcon.CommandOutput, error)
 
-type CommandHandler struct {
-	cmd CommandFunc
+type commandHandler struct {
+	cmd commandFunc
 }
 
-func NewCommandHandler(s *rcon.Service) *CommandHandler {
-	return &CommandHandler{cmd: s.Command}
+// Alternative way to create a handler without using a closure - we still use our custom
+// handler function for error handling and convert our custom ServeHTTP into the proper http.Handler type
+func Command(fn commandFunc) http.Handler {
+	ch := &commandHandler{cmd: fn}
+	return h(ch.ServeHTTP)
 }
 
-func (ch *CommandHandler) RunCommand(w http.ResponseWriter, r *http.Request) error {
+func (ch *commandHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	var input rcon.CommandInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		return err

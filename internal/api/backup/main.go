@@ -3,8 +3,14 @@ package backup
 import (
 	"context"
 	"io/fs"
-	"joerx/minecraft-cli/internal/service/rcon"
+	"joerx/minecraft-cli/internal/api/rcon"
 )
+
+type InputError string
+
+func (ie InputError) Error() string {
+	return string(ie)
+}
 
 type Config struct {
 	RCon  rcon.RCon
@@ -23,8 +29,8 @@ type CreateBackupInput struct {
 }
 
 type CreateBackupOutput struct {
-	MD5      string `json:"md5"`
-	Location string `json:"location"`
+	ObjectInfo
+	MD5 string `json:"md5"`
 }
 
 type ListBackupOutput struct {

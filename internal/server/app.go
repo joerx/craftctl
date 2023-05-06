@@ -1,11 +1,11 @@
-package httpd
+package server
 
 import (
 	"context"
 	"fmt"
+	"joerx/minecraft-cli/internal/api/backup"
+	"joerx/minecraft-cli/internal/api/rcon"
 	"joerx/minecraft-cli/internal/mc"
-	"joerx/minecraft-cli/internal/service/backup"
-	"joerx/minecraft-cli/internal/service/rcon"
 	"joerx/minecraft-cli/internal/storage/s3"
 	"joerx/minecraft-cli/internal/systemd"
 	"os"
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
-type AppConfig struct {
+type appConfig struct {
 	RCONHostPort string
 	RCONPasswd   string
 	MCWorldDir   string
@@ -23,13 +23,13 @@ type AppConfig struct {
 	S3Region     string
 }
 
-type Application struct {
+type application struct {
 	RCon   *rcon.Service
 	Backup backup.Service
 	UC     *systemd.UnitController
 }
 
-func newApp(cfg AppConfig) (*Application, error) {
+func newApp(cfg appConfig) (*application, error) {
 	rc := mc.NewClient(mc.ClientConfig{Password: cfg.RCONPasswd, HostPort: cfg.RCONHostPort})
 
 	uc, err := systemd.NewUnitController(context.Background(), cfg.UnitName)
@@ -46,14 +46,14 @@ func newApp(cfg AppConfig) (*Application, error) {
 	rsvc := rcon.NewService(rc)
 	bsvc := backup.NewService(backup.Config{RCon: rc, World: worldFS, Store: store})
 
-	return &Application{
+	return &application{
 		RCon:   rsvc,
 		Backup: bsvc,
 		UC:     uc,
 	}, nil
 }
 
-func newStore(cfg AppConfig) (backup.Store, error) {
+func newStore(cfg appConfig) (backup.Store, error) {
 	if cfg.S3Region == "" {
 		return nil, fmt.Errorf("no s3 region provided")
 	}

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"joerx/minecraft-cli/internal/service/backup"
+	"joerx/minecraft-cli/internal/api/backup"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"

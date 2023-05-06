@@ -6,8 +6,8 @@ import (
 )
 
 type ObjectInfo struct {
-	Location string
-	Key      string
+	Location string `json:"location"`
+	Key      string `json:"key"`
 }
 
 type Putter interface {
