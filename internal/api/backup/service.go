@@ -38,8 +38,13 @@ func (s *backupService) Create(ctx context.Context, in CreateBackupInput) (Creat
 	return s.zipAndStore(ctx, in.Key)
 }
 
+// List returns a list of backups from the underlying store.
 func (s *backupService) List(ctx context.Context) (ListBackupOutput, error) {
-	return ListBackupOutput{}, nil
+	backups, err := s.store.List(ctx)
+	if err != nil {
+		return ListBackupOutput{}, err
+	}
+	return ListBackupOutput{Backups: backups}, nil
 }
 
 func (s *backupService) Restore(ctx context.Context, in RestoreBackupInput) (RestoreBackupOutput, error) {
@@ -61,13 +66,15 @@ func (s *backupService) zipAndStore(ctx context.Context, key string) (CreateBack
 		return CreateBackupOutput{}, err
 	}
 
+	checksum := fmt.Sprintf("%x", md5.Sum(buf.Bytes()))
+	log.Printf("Archived world, checksum is %s", checksum)
+
 	oi, err := s.store.Put(ctx, sanitizeKey(key, ".zip"), buf)
 	if err != nil {
 		return CreateBackupOutput{}, err
 	}
 
-	checksum := fmt.Sprintf("%x", md5.Sum(buf.Bytes()))
-	log.Printf("Archived world data, checksum is %s", checksum)
+	log.Printf("Uploaded world to %s", oi.Location)
 
 	return CreateBackupOutput{
 		MD5:        checksum,

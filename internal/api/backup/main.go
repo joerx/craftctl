@@ -34,7 +34,7 @@ type CreateBackupOutput struct {
 }
 
 type ListBackupOutput struct {
-	Objects []ObjectInfo
+	Backups []ObjectInfo `json:"backups"`
 }
 
 type RestoreBackupInput struct{}

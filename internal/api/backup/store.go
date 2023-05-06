@@ -24,6 +24,6 @@ type Lister interface {
 
 type Store interface {
 	Putter
+	Lister
 	// Getter
-	// Lister
 }

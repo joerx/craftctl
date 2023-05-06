@@ -75,3 +75,58 @@ func TestCreateBackup(t *testing.T) {
 		}
 	}
 }
+
+func TestListBackups(t *testing.T) {
+	testCases := []struct {
+		out          backup.ListBackupOutput
+		err          error
+		wantCode     int
+		wantResponse map[string]interface{}
+	}{
+		{
+			out:      backup.ListBackupOutput{Backups: []backup.ObjectInfo{{Location: "test://foo", Key: "foo"}}},
+			err:      nil,
+			wantCode: http.StatusOK,
+			wantResponse: map[string]interface{}{
+				"backups": []interface{}{
+					map[string]interface{}{
+						"location": "test://foo",
+						"key":      "foo",
+					},
+				},
+			},
+		},
+		{
+			out:      backup.ListBackupOutput{},
+			err:      fmt.Errorf("whoopsie"),
+			wantCode: http.StatusInternalServerError,
+			wantResponse: map[string]interface{}{
+				"error": "whoopsie",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		h := ListBackups(func(ctx context.Context) (backup.ListBackupOutput, error) {
+			return tc.out, tc.err
+		})
+
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		w := httptest.NewRecorder()
+
+		h.ServeHTTP(w, req)
+		resp := w.Result()
+
+		if tc.wantCode != resp.StatusCode {
+			t.Errorf("want status %d, got %d", tc.wantCode, resp.StatusCode)
+		}
+
+		var gotResponse map[string]interface{}
+		if err := json.NewDecoder(resp.Body).Decode(&gotResponse); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(tc.wantResponse, gotResponse) {
+			t.Errorf("want response %#v but got %#v", tc.wantResponse, gotResponse)
+		}
+	}
+}

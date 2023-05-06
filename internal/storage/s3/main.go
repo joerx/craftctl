@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"io"
 	"joerx/minecraft-cli/internal/api/backup"
+	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
@@ -38,4 +41,42 @@ func (st *S3Store) Put(ctx context.Context, key string, r io.Reader) (backup.Obj
 
 	oi.Location = fmt.Sprintf("s3://%s/%s", st.bucket, key)
 	return oi, nil
+}
+
+func (st *S3Store) List(ctx context.Context) ([]backup.ObjectInfo, error) {
+	svc := s3.New(st.sess)
+	result, err := svc.ListObjects(&s3.ListObjectsInput{
+		Bucket:  aws.String(st.bucket),
+		MaxKeys: aws.Int64(10),
+	})
+
+	if err != nil {
+		log.Println(err)
+		return []backup.ObjectInfo{}, s3Error(err)
+	}
+
+	log.Printf("Found %d objects in s3://%s", len(result.Contents), st.bucket)
+
+	objects := make([]backup.ObjectInfo, len(result.Contents))
+	for i, r := range result.Contents {
+		objects[i] = backup.ObjectInfo{
+			Key:      *r.Key,
+			Location: fmt.Sprintf("s3://%s/%s", st.bucket, *r.Key),
+		}
+	}
+
+	return objects, nil
+}
+
+func s3Error(err error) error {
+	var msg string
+	splits := strings.Split(strings.ReplaceAll(err.Error(), "\r\n", "\n"), "\n")
+
+	if len(splits) >= 1 {
+		msg = splits[0]
+	} else {
+		msg = "unknown error"
+	}
+
+	return fmt.Errorf("s3 error - %s", msg)
 }

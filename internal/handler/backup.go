@@ -29,3 +29,14 @@ func CreateBackup(svc func(context.Context, backup.CreateBackupInput) (backup.Cr
 		return nil
 	})
 }
+
+func ListBackups(svc func(context.Context) (backup.ListBackupOutput, error)) http.Handler {
+	return h(func(w http.ResponseWriter, r *http.Request) error {
+		o, err := svc(r.Context())
+		if err != nil {
+			return err
+		}
+		serveJSON(w, o, http.StatusOK)
+		return nil
+	})
+}
